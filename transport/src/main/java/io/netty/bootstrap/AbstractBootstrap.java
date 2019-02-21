@@ -103,6 +103,7 @@ public abstract class AbstractBootstrap<B extends AbstractBootstrap<B, C>, C ext
         if (channelClass == null) {
             throw new NullPointerException("channelClass");
         }
+        // 无参构造方法构建Bootstrap时，调用bootstrap的channel方法时构建一个channelFactory
         return channelFactory(new ReflectiveChannelFactory<C>(channelClass));
     }
 
@@ -118,6 +119,7 @@ public abstract class AbstractBootstrap<B extends AbstractBootstrap<B, C>, C ext
             throw new IllegalStateException("channelFactory set already");
         }
 
+        // 设置channelFactory
         this.channelFactory = channelFactory;
         return self();
     }
@@ -271,6 +273,9 @@ public abstract class AbstractBootstrap<B extends AbstractBootstrap<B, C>, C ext
      * Create a new {@link Channel} and bind it.
      */
     public ChannelFuture bind(SocketAddress localAddress) {
+        // 校验EventLoopGroup group和ChannelFactory channelFactory变量是否赋值
+        // group代表bossGroup，在调用ServerBootstrap的group方法后赋值
+        // channelFactory在调用ServerBootstrap的channel方法后赋值
         validate();
         if (localAddress == null) {
             throw new NullPointerException("localAddress");
@@ -279,6 +284,7 @@ public abstract class AbstractBootstrap<B extends AbstractBootstrap<B, C>, C ext
     }
 
     private ChannelFuture doBind(final SocketAddress localAddress) {
+        // 初始化和注册Channel
         final ChannelFuture regFuture = initAndRegister();
         final Channel channel = regFuture.channel();
         if (regFuture.cause() != null) {
@@ -288,6 +294,7 @@ public abstract class AbstractBootstrap<B extends AbstractBootstrap<B, C>, C ext
         if (regFuture.isDone()) {
             // At this point we know that the registration was complete and successful.
             ChannelPromise promise = channel.newPromise();
+            // 绑定服务器端端口
             doBind0(regFuture, channel, localAddress, promise);
             return promise;
         } else {
@@ -317,7 +324,9 @@ public abstract class AbstractBootstrap<B extends AbstractBootstrap<B, C>, C ext
     final ChannelFuture initAndRegister() {
         Channel channel = null;
         try {
+            // 调用的是ReflectiveChannelFactory的newChannel()方法
             channel = channelFactory.newChannel();
+            // 初始化Channel
             init(channel);
         } catch (Throwable t) {
             if (channel != null) {
@@ -330,6 +339,7 @@ public abstract class AbstractBootstrap<B extends AbstractBootstrap<B, C>, C ext
             return new DefaultChannelPromise(new FailedChannel(), GlobalEventExecutor.INSTANCE).setFailure(t);
         }
 
+        // 最终调用AbstractChannel的register(EventLoop, ChannelPromise)方法注册selector
         ChannelFuture regFuture = config().group().register(channel);
         if (regFuture.cause() != null) {
             if (channel.isRegistered()) {

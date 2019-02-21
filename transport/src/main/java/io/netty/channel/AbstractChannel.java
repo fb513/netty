@@ -80,8 +80,11 @@ public abstract class AbstractChannel extends DefaultAttributeMap implements Cha
      */
     protected AbstractChannel(Channel parent) {
         this.parent = parent;
+        // Channel的唯一标示
         id = newId();
+        // Unsafe负责对TCP一些读写等Channel底层操作
         unsafe = newUnsafe();
+        // 创建ChannelPipeline
         pipeline = newChannelPipeline();
     }
 
@@ -474,6 +477,7 @@ public abstract class AbstractChannel extends DefaultAttributeMap implements Cha
                 return;
             }
 
+            // 绑定线程
             AbstractChannel.this.eventLoop = eventLoop;
 
             if (eventLoop.inEventLoop()) {
@@ -559,6 +563,7 @@ public abstract class AbstractChannel extends DefaultAttributeMap implements Cha
 
             boolean wasActive = isActive();
             try {
+                // 调用JDK底层Channel绑定端口
                 doBind(localAddress);
             } catch (Throwable t) {
                 safeSetFailure(promise, t);

@@ -431,6 +431,8 @@ public final class NioEventLoop extends SingleThreadEventLoop {
                         // fall-through to SELECT since the busy-wait is not supported with NIO
 
                     case SelectStrategy.SELECT:
+                        // 轮询注册的I/O事件
+                        // 检测I/O事件
                         select(wakenUp.getAndSet(false));
 
                         // 'wakenUp.compareAndSet(false, true)' is always evaluated
@@ -477,12 +479,15 @@ public final class NioEventLoop extends SingleThreadEventLoop {
 
                 cancelledKeys = 0;
                 needsToSelectAgain = false;
+                // 控制processSelectedKeys()和runAllTasks()执行时间
                 final int ioRatio = this.ioRatio;
                 if (ioRatio == 100) {
                     try {
+                        // 处理I/O相关逻辑
                         processSelectedKeys();
                     } finally {
                         // Ensure we always run tasks.
+                        // 用来处理外部线程放到taskQueue中的任务
                         runAllTasks();
                     }
                 } else {
@@ -757,6 +762,9 @@ public final class NioEventLoop extends SingleThreadEventLoop {
     }
 
     private void select(boolean oldWakenUp) throws IOException {
+        // deadline以及任务穿插逻辑处理
+        // 阻塞式select
+        // 避免JDK空轮询bug
         Selector selector = this.selector;
         try {
             int selectCnt = 0;
@@ -765,6 +773,7 @@ public final class NioEventLoop extends SingleThreadEventLoop {
 
             for (;;) {
                 long timeoutMillis = (selectDeadLineNanos - currentTimeNanos + 500000L) / 1000000L;
+                // 如果已经超过截止时间
                 if (timeoutMillis <= 0) {
                     if (selectCnt == 0) {
                         selector.selectNow();
@@ -808,12 +817,17 @@ public final class NioEventLoop extends SingleThreadEventLoop {
                     break;
                 }
 
+                // 解决JDK空轮询bug
                 long time = System.nanoTime();
+                // time - TimeUnit.MILLISECONDS.toNanos(timeoutMillis) < currentTimeNanos
+                // 证明没有阻塞就返回了，证明空轮询被处罚
                 if (time - TimeUnit.MILLISECONDS.toNanos(timeoutMillis) >= currentTimeNanos) {
                     // timeoutMillis elapsed without anything selected.
                     selectCnt = 1;
                 } else if (SELECTOR_AUTO_REBUILD_THRESHOLD > 0 &&
                         selectCnt >= SELECTOR_AUTO_REBUILD_THRESHOLD) {
+                    // 如果空轮询的次数大于512
+                    // 将之前的select的key注册到新创建的select上
                     // The code exists in an extra method to ensure the method is not too big to inline as this
                     // branch is not very likely to get hit very frequently.
                     selector = selectRebuildSelector(selectCnt);

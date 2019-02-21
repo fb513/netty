@@ -73,11 +73,13 @@ public abstract class MultithreadEventExecutorGroup extends AbstractEventExecuto
         }
 
         if (executor == null) {
+            // 创建一个线程执行器
             executor = new ThreadPerTaskExecutor(newDefaultThreadFactory());
         }
 
         children = new EventExecutor[nThreads];
 
+        // 构造EventLoop
         for (int i = 0; i < nThreads; i ++) {
             boolean success = false;
             try {
@@ -108,6 +110,7 @@ public abstract class MultithreadEventExecutorGroup extends AbstractEventExecuto
             }
         }
 
+        // 构建一个线程选择器
         chooser = chooserFactory.newChooser(children);
 
         final FutureListener<Object> terminationListener = new FutureListener<Object>() {
@@ -129,6 +132,7 @@ public abstract class MultithreadEventExecutorGroup extends AbstractEventExecuto
     }
 
     protected ThreadFactory newDefaultThreadFactory() {
+        // EventLoop线程命令规则，如nioEventLoop-1-xx
         return new DefaultThreadFactory(getClass());
     }
 

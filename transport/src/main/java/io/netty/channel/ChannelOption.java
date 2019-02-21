@@ -105,12 +105,23 @@ public class ChannelOption<T> extends AbstractConstant<ChannelOption<T>> {
      */
     public static final ChannelOption<Boolean> AUTO_CLOSE = valueOf("AUTO_CLOSE");
 
+    /**
+     * 对应tcp/ip协议listen函数中的backlog参数。函数listen(int socketfd, int backlog)用来初始化服务端可连接队列。
+     * 服务端处理客户端连接请求是顺序处理的，所以同一时间只能处理一个客户端连接，多个客户端来的时候，
+     * 服务端将不能处理的客户端连接请求放在队列中等待处理，backlog参数指定了队列的大小。
+     */
     public static final ChannelOption<Boolean> SO_BROADCAST = valueOf("SO_BROADCAST");
+    /**
+     * 是否启用心跳保活机制。在双方TCP套接字建立连接后（即都进入ESTABLISHED状态）
+     * 并且在两个小时左右上层没有任何数据传输的情况下，这套机制才会被激活。
+     */
     public static final ChannelOption<Boolean> SO_KEEPALIVE = valueOf("SO_KEEPALIVE");
     public static final ChannelOption<Integer> SO_SNDBUF = valueOf("SO_SNDBUF");
     public static final ChannelOption<Integer> SO_RCVBUF = valueOf("SO_RCVBUF");
     public static final ChannelOption<Boolean> SO_REUSEADDR = valueOf("SO_REUSEADDR");
     public static final ChannelOption<Integer> SO_LINGER = valueOf("SO_LINGER");
+    /** 服务器请求处理线程全满时，用于临时存放已完成三次握手的请求的队列的最大长度。
+     * 如果未设置或所设置的值小于1，Java将使用默认值50。*/
     public static final ChannelOption<Integer> SO_BACKLOG = valueOf("SO_BACKLOG");
     public static final ChannelOption<Integer> SO_TIMEOUT = valueOf("SO_TIMEOUT");
 
